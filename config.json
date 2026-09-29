@@ -1,0 +1,33 @@
+{
+  "contact": "",
+  "lieu": "Toulouse",
+  "latitude": 43.6,
+  "altitude_m": 150,
+  "zones": [
+    "partout",
+    "sud"
+  ],
+  "reference": {
+    "commentaire": "Les dates du fichier plantes.csv correspondent à la plaine du nord de la France (région parisienne).",
+    "latitude": 48.85,
+    "altitude_m": 35
+  },
+  "jours_par_degre_latitude": 3.0,
+  "jours_par_100m_altitude": 3.3,
+  "plantes_par_jour": 24,
+  "polices": {
+    "titre": "polices/IMFellEnglish-Regular.ttf",
+    "normal": "polices/IMFellEnglish-Regular.ttf",
+    "italique": "polices/IMFellEnglish-Italic.ttf"
+  },
+  "contraste": 0.7,
+  "papier": 0.94,
+  "relief": 80,
+  "fuseau": "Europe/Paris",
+  "tramage": "atkinson",
+  "ecran": {
+    "rotation": 90,
+    "inverser": false,
+    "commentaire": "rotation 90 ou 270 selon le sens du cadre ; inverser si l'écran affiche le négatif"
+  }
+}
