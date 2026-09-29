@@ -1,0 +1,52 @@
+name: Publier les images du jour
+
+on:
+  schedule:
+    - cron: "5 22 * * *"      # chaque nuit vers minuit (heure de Paris) ; génère aujourd'hui + demain
+  workflow_dispatch:           # bouton « Run workflow » pour lancer à la main
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install pillow numpy
+      - run: python publier.py
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      # GitHub désactive les tâches planifiées d'un dépôt public inactif depuis 60 jours :
+      # une petite mise à jour le 1er de chaque mois garde le dépôt actif.
+      - name: Garder le dépôt actif
+        if: github.event_name == 'schedule'
+        run: |
+          if [ "$(date +%d)" = "01" ]; then
+            date -u > .actif
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .actif && git commit -m "Maintien du dépôt actif" && git push
+          fi
+
+  publier:
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v5
