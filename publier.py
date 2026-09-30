@@ -68,6 +68,13 @@ def main():
     if SITE.exists():
         shutil.rmtree(SITE)
     plantes, choix = G.charger()
+    avec = [pid for pid, c in choix.items() if c and Path(c["fichier"]).exists()]
+    if not avec:
+        raise SystemExit("Aucune planche trouvée : le dossier planches/ (avec candidats.csv et choix.csv) "
+                         "manque dans le dépôt.")
+    if not Path("polices").exists():
+        print("Attention : dossier polices/ absent du dépôt, police de secours utilisée.")
+    print(f"{len(avec)} plantes avec planche.")
     listes = {}
     for d in (aujourdhui, aujourdhui + dt.timedelta(days=1)):    # demain aussi : couvre le passage de minuit
         listes[d] = generer_jour(d, plantes, choix, cfg)
