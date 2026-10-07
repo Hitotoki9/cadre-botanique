@@ -208,7 +208,7 @@ def taille_ajustee(d, texte, style, taille, largeur_max, cfg):
     return police(style, taille, cfg)
 
 
-def composer(plante, planche_1bit, credit, date, heure, cfg):
+def composer(plante, planche_1bit, credit, date, heure, cfg, meteo=None):
     page = Image.new("L", (L, H), 255)
     d = ImageDraw.Draw(page)
     d.fontmode = "1"                      # texte sans anticrénelage : plus net sur un écran noir et blanc
@@ -233,11 +233,8 @@ def composer(plante, planche_1bit, credit, date, heure, cfg):
     if credit:
         f_credit = police("italique", 13, cfg)
         d.text((CADRE[2] - d.textlength(credit, font=f_credit), CADRE[3] + 4), credit, font=f_credit, fill=0)
-    bas = f"{JOURS[date.weekday()]}  {date.day}  {MOIS[date.month - 1].upper()}"
-    d.text((28, H - 26), bas, font=f_petit, fill=0)
-    if heure is not None:
-        droite = f"{heure} h"
-        d.text((L - 28 - d.textlength(droite, font=f_petit), H - 26), droite, font=f_petit, fill=0)
+    # pied de page : « 07/10 · Belles éclaircies, frais au matin — 9° à 21° »
+    pied_page(d, date, meteo, cfg)
 
     # texte en noir et blanc net (seuil), puis on colle la planche tramée au centre de la zone
     page = page.point(lambda p: 255 if p > 150 else 0).convert("1")
@@ -247,6 +244,23 @@ def composer(plante, planche_1bit, credit, date, heure, cfg):
         y = zy0 + (zy1 - zy0 - planche_1bit.height) // 2
         page.paste(planche_1bit, (x, y))
     return page
+
+
+def pied_page(d, date, meteo, cfg):
+    """Date courte en romain, puis la phrase météo en italique ; on prend la variante la plus longue qui tient."""
+    largeur = L - 50
+    date_txt = f"{date.day:02d}/{date.month:02d}"
+    for taille in (16, 15, 14):
+        f_date, f_meteo = police("normal", taille, cfg), police("italique", taille, cfg)
+        sep = "  ·  "
+        for phrase in (meteo or []):
+            total = d.textlength(date_txt + sep, font=f_date) + d.textlength(phrase, font=f_meteo)
+            if total <= largeur:
+                x = (L - total) / 2
+                d.text((x, H - 28), date_txt + sep, font=f_date, fill=0)
+                d.text((x + d.textlength(date_txt + sep, font=f_date), H - 28), phrase, font=f_meteo, fill=0)
+                return
+    centre(d, H - 28, date_txt, police("normal", 16, cfg))     # pas de météo : la date seule
 
 
 # ---------- données ----------
@@ -276,7 +290,7 @@ def credit_de(c):
 
 
 _cache = {}
-def image_plante(p, choix, date, heure, cfg, tramage):
+def image_plante(p, choix, date, heure, cfg, tramage, meteo=None):
     c = choix.get(p["id"])
     planche = None
     if c and Path(c["fichier"]).exists():
@@ -287,7 +301,7 @@ def image_plante(p, choix, date, heure, cfg, tramage):
         planche = _cache[c["fichier"]]
     else:
         print(f"   pas de planche pour {p['nom_fr']} : texte seul")
-    return composer(p, planche, credit_de(c), date, heure, cfg)
+    return composer(p, planche, credit_de(c), date, heure, cfg, meteo)
 
 
 def essais(p, choix, cfg, tramage):
@@ -327,6 +341,9 @@ def main():
     date = dt.date.fromisoformat(option("--date")) if option("--date") else dt.date.today()
     cfg = json.load(open("config.json", encoding="utf-8"))
     plantes, choix = charger()
+    import meteo
+    previsions = {} if ("--essais" in args or "--toutes" in args) else meteo.previsions(cfg)
+    ciel = previsions.get(date)
 
     if "--essais" in args:
         essais(plantes[option("--essais")], choix, cfg, tramage)
@@ -334,7 +351,7 @@ def main():
         dossier = SORTIE / "test"
         dossier.mkdir(parents=True, exist_ok=True)
         pid = option("--plante")
-        image_plante(plantes[pid], choix, date, None, cfg, tramage).save(dossier / f"{pid}_{tramage}.png")
+        image_plante(plantes[pid], choix, date, None, cfg, tramage, ciel).save(dossier / f"{pid}_{tramage}.png")
         print(f"-> {dossier / f'{pid}_{tramage}.png'}")
     elif "--toutes" in args:
         dossier = SORTIE / "toutes"
@@ -363,7 +380,7 @@ def main():
         if len({p["id"] for p in du_jour}) < 4:      # presque aucune planche : on reprend toutes les plantes
             du_jour = selection.plantes_du_jour(date)
         for heure, p in enumerate(du_jour):
-            image_plante(p, choix, date, heure, cfg, tramage).save(dossier / f"{heure:02d}.png")
+            image_plante(p, choix, date, heure, cfg, tramage, ciel).save(dossier / f"{heure:02d}.png")
             print(f"{heure:02d} h  {p['nom_fr']}")
         print(f"\nImages dans {dossier}")
 

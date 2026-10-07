@@ -14,6 +14,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import generer_images as G
+import meteo
 import selection
 
 SITE = Path("site")
@@ -30,7 +31,7 @@ def vers_bin(image, rotation, inverser):
     return donnees
 
 
-def generer_jour(date, plantes, choix, cfg):
+def generer_jour(date, plantes, choix, cfg, previsions=None):
     dossier = SITE / date.isoformat()
     dossier.mkdir(parents=True, exist_ok=True)
     avec_planche = {pid for pid, c in choix.items() if c and Path(c["fichier"]).exists()}
@@ -40,7 +41,8 @@ def generer_jour(date, plantes, choix, cfg):
     ecran = cfg.get("ecran", {})
     liste = []
     for heure, p in enumerate(du_jour):
-        img = G.image_plante(p, choix, date, heure, cfg, cfg.get("tramage", "atkinson"))
+        img = G.image_plante(p, choix, date, heure, cfg, cfg.get("tramage", "atkinson"),
+                             (previsions or {}).get(date))
         img.save(dossier / f"{heure:02d}.png", optimize=True)
         (dossier / f"{heure:02d}.bin").write_bytes(
             vers_bin(img, ecran.get("rotation", 90), ecran.get("inverser", False)))
@@ -75,9 +77,12 @@ def main():
     if not Path("polices").exists():
         print("Attention : dossier polices/ absent du dépôt, police de secours utilisée.")
     print(f"{len(avec)} plantes avec planche.")
+    previsions = meteo.previsions(cfg)
+    for jour, v in previsions.items():
+        print(f"Météo {jour} : {v[0]}")
     listes = {}
     for d in (aujourdhui, aujourdhui + dt.timedelta(days=1)):    # demain aussi : couvre le passage de minuit
-        listes[d] = generer_jour(d, plantes, choix, cfg)
+        listes[d] = generer_jour(d, plantes, choix, cfg, previsions)
     galerie(aujourdhui, listes[aujourdhui])
     (SITE / "derniere_publication.txt").write_text(dt.datetime.now().isoformat(), encoding="utf-8")
     print(f"\nSite prêt dans {SITE}/")
