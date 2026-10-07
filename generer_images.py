@@ -26,8 +26,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 import selection   # même dossier : gère le lieu, le décalage des floraisons et le choix des 24 plantes
 
 L, H = 480, 800                        # écran 7,5" utilisé en portrait
-ZONE = (30, 30, 450, 522)              # zone de l'illustration (x0, y0, x1, y1), à l'intérieur du cadre
-CADRE = (22, 22, 458, 530)
+ZONE = (30, 30, 450, 562)              # zone de l'illustration (x0, y0, x1, y1), à l'intérieur du cadre
+CADRE = (22, 22, 458, 570)
 DOSSIER_PLANCHES = Path("planches")
 SORTIE = Path("sortie")
 
@@ -220,19 +220,16 @@ def composer(plante, planche_1bit, credit, date, heure, cfg, meteo=None):
 
     # textes
     titre = taille_ajustee(d, plante["nom_fr"], "titre", 36, L - 40, cfg)
-    centre(d, 560, plante["nom_fr"], titre)
-    centre(d, 604, plante["nom_latin"], taille_ajustee(d, plante["nom_latin"], "italique", 23, L - 60, cfg))
-    centre(d, 638, plante["famille"].upper(), police("normal", 14, cfg), espacement=3)
-    d.line((L / 2 - 30, 664, L / 2 + 30, 664), fill=0, width=1)
-    centre(d, 674, mois_floraison(plante), police("normal", 19, cfg))
+    centre(d, 582, plante["nom_fr"], titre)
+    centre(d, 626, plante["nom_latin"], taille_ajustee(d, plante["nom_latin"], "italique", 23, L - 60, cfg))
+    d.line((L / 2 - 30, 660, L / 2 + 30, 660), fill=0, width=1)
+    centre(d, 670, mois_floraison(plante), police("normal", 19, cfg))
     f_note = police("italique", 17, cfg)
     for i, ligne in enumerate(couper(d, plante["note"], f_note, L - 70)[:3]):
-        centre(d, 702 + i * 21, ligne, f_note)
+        centre(d, 698 + i * 21, ligne, f_note)
 
     f_petit = police("normal", 14, cfg)
-    if credit:
-        f_credit = police("italique", 13, cfg)
-        d.text((CADRE[2] - d.textlength(credit, font=f_credit), CADRE[3] + 4), credit, font=f_credit, fill=0)
+    # (le crédit de la planche n'est plus affiché sur l'écran : il reste dans planches/candidats.csv)
     # pied de page : « 07/10 · Belles éclaircies, frais au matin — 9° à 21° »
     pied_page(d, date, meteo, cfg)
 

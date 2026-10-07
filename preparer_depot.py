@@ -94,7 +94,7 @@ WORKFLOW = """name: Publier les images du jour
 
 on:
   schedule:
-    - cron: "5 22 * * *"      # chaque nuit vers minuit (heure de Paris) ; génère aujourd'hui + demain
+    - cron: "5 4,10,16,22 * * *"   # toutes les 6 h (vers 0 h, 6 h, 12 h et 18 h, heure de Paris) : météo à jour
   workflow_dispatch:           # bouton « Run workflow » pour lancer à la main
   push:
     branches: [main]
@@ -126,7 +126,7 @@ jobs:
       - name: Garder le dépôt actif
         if: github.event_name == 'schedule'
         run: |
-          if [ "$(date +%d)" = "01" ]; then
+          if [ "$(date -u +%d)" = "01" ] && [ "$(date -u +%H)" = "22" ]; then
             date -u > .actif
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

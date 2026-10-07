@@ -61,7 +61,60 @@ def galerie(date, liste):
         "<title>Cadre botanique</title><style>body{font-family:Georgia,serif;margin:16px;background:#f4f1ea}"
         ".g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}"
         "img{width:100%;border:1px solid #ccc;background:#fff}figcaption{font-size:13px}</style>"
-        f"<h1>Cadre botanique — {date:%d/%m/%Y}</h1><div class=g>{cases}</div>", encoding="utf-8")
+        f"<h1>Cadre botanique — {date:%d/%m/%Y}</h1><div class=g>{cases}</div>"
+        "<p style='margin-top:32px;font-size:14px'><a href='credits.html'>Crédits des illustrations</a></p>",
+        encoding="utf-8")
+
+
+OUVRAGES = {
+    "Sturm": "Deutschlands Flora in Abbildungen (Sturm)",
+    "Köhler": "Köhler's Medizinal-Pflanzen",
+    "Flora Batava": "Flora Batava",
+    "Curtis": "Curtis's Botanical Magazine",
+    "Thomé": "Flora von Deutschland, Österreich und der Schweiz (Thomé)",
+    "Lindman": "Bilder ur Nordens Flora (Lindman)",
+    "Sowerby": "English Botany (Sowerby)",
+    "Fuchs": "De historia stirpium (Fuchs)",
+    "Flora Danica": "Flora Danica",
+    "Plantenschat": "Plantenschat",
+}
+
+
+def credits(plantes, choix):
+    """Page credits.html : illustrateur, ouvrage et source de chaque planche, plus police et météo."""
+    e = html.escape
+    lignes = []
+    for pid, p in sorted(plantes.items(), key=lambda x: x[1]["nom_fr"].lower()):
+        c = choix.get(pid)
+        if not c or not Path(c["fichier"]).exists():
+            continue
+        ouvrage = c.get("source") or ""
+        ouvrage = OUVRAGES.get(ouvrage, "" if ouvrage in ("Illustration", "ajout manuel") else ouvrage)
+        auteur = (c.get("auteur") or "").split("(")[0].strip() or "Auteur inconnu"
+        lien = c.get("page") or ""
+        source = f'<a href="{e(lien)}">Wikimedia Commons</a>' if lien else "—"
+        lignes.append(f"<tr><td>{e(p['nom_fr'])}<br><i>{e(p['nom_latin'])}</i></td><td>{e(auteur)}</td>"
+                      f"<td>{e(ouvrage)}</td><td>{e(c.get('licence') or '')}</td><td>{source}</td></tr>")
+    (SITE / "credits.html").write_text(
+        "<!doctype html><html lang=fr><meta charset=utf-8><meta name=viewport content='width=device-width'>"
+        "<title>Crédits — Cadre botanique</title><style>"
+        "body{font-family:Georgia,serif;margin:0;background:#f4f1ea;color:#222}"
+        "main{max-width:900px;margin:auto;padding:24px 16px}h1{font-weight:normal}"
+        "table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}"
+        "th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}"
+        "th{font-weight:normal;font-variant:small-caps;letter-spacing:1px;background:#ebe6da}"
+        "a{color:#2d4a33}.wrap{overflow-x:auto}</style><main>"
+        "<h1>Crédits</h1>"
+        "<p>Les planches botaniques affichées par le cadre sont des illustrations anciennes du domaine public, "
+        "issues de Wikimedia Commons. Elles sont recadrées et converties en noir et blanc pour l'écran. "
+        "Merci aux illustrateurs, graveurs et éditeurs qui les ont créées, et aux institutions qui les ont "
+        "numérisées.</p>"
+        "<p>Police : <i>IM Fell English</i>, d'Igino Marini, sous licence SIL Open Font License. "
+        "Prévisions météo : <a href='https://open-meteo.com/'>Open-Meteo.com</a> (CC BY 4.0).</p>"
+        f"<h2 style='font-weight:normal'>Planches ({len(lignes)})</h2><div class=wrap><table>"
+        "<tr><th>Plante</th><th>Illustrateur</th><th>Ouvrage</th><th>Licence</th><th>Source</th></tr>"
+        + "".join(lignes) + "</table></div><p><a href='index.html'>← Planches du jour</a></p></main></html>",
+        encoding="utf-8")
 
 
 def main():
@@ -84,6 +137,7 @@ def main():
     for d in (aujourdhui, aujourdhui + dt.timedelta(days=1)):    # demain aussi : couvre le passage de minuit
         listes[d] = generer_jour(d, plantes, choix, cfg, previsions)
     galerie(aujourdhui, listes[aujourdhui])
+    credits(plantes, choix)
     (SITE / "derniere_publication.txt").write_text(dt.datetime.now().isoformat(), encoding="utf-8")
     print(f"\nSite prêt dans {SITE}/")
 
