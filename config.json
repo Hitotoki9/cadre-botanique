@@ -30,5 +30,14 @@
     "rotation": 90,
     "inverser": false,
     "commentaire": "rotation 90 ou 270 selon le sens du cadre ; inverser si l'écran affiche le négatif"
+  },
+  "vent_local": {
+    "nom": "vent d'autan",
+    "secteur": [
+      90,
+      170
+    ],
+    "rafales_min": 40,
+    "commentaire": "vent régional nommé dans la phrase météo ; à adapter au lieu (ex. mistral : secteur [320, 30])"
   }
 }
