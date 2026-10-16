@@ -36,7 +36,7 @@ jobs:
       - name: Garder le dépôt actif
         if: github.event_name == 'schedule'
         run: |
-          if [ "$(date -u +%d)" = "01" ] && [ "$(date -u +%H)" = "22" ]; then
+          if [ "$(date -u +%d)" = "01" ] && [ "$(date -u +%H)" = "20" ]; then
             date -u > .actif
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
