@@ -5,7 +5,7 @@ Exemples : « Belles éclaircies, fraîcheur matinale — 9° à 21° »
            « Grisaille le matin, soleil l'après-midi — 11° à 22° »
            « Ciel limpide, vent d'autan — 14° à 26° »
 Pour un même état du ciel, plusieurs formulations existent : le choix change d'un jour à l'autre
-mais reste le même toute la journée (les images sont régénérées toutes les 6 h).
+mais reste le même toute la journée (les images sont régénérées toutes les 3 h le jour, 6 h la nuit).
 """
 import datetime as dt
 import json
