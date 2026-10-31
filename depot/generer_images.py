@@ -84,16 +84,19 @@ def cadre_imprime(encre):
 
 
 def recadrer(gris):
-    """Retire les marges de papier vide et, s'il y en a un, le cadre imprimé avec son titre et sa légende
-    (le cadre de l'écran et le nom de la plante les remplacent)."""
+    """Retire les marges de papier vide."""
     a = np.asarray(gris, dtype=np.int16)
     papier = np.percentile(a, 90)
     encre = a < papier - 45
-    cadre = cadre_imprime(encre)
-    if cadre:
-        x0, y0, x1, y1 = cadre
-        gris = gris.crop(cadre)
-        a, encre = a[y0:y1, x0:x1], encre[y0:y1, x0:x1]
+    
+    # SUPPRESSION de la détection automatique de cadre (cadre_imprime) 
+    # qui confond les fleurs denses du haut avec un bord de page :
+    # cadre = cadre_imprime(encre)
+    # if cadre:
+    #     x0, y0, x1, y1 = cadre
+    #     gris = gris.crop(cadre)
+    #     a, encre = a[y0:y1, x0:x1], encre[y0:y1, x0:x1]
+
     lignes = np.where(encre.mean(axis=1) > 0.004)[0]
     colonnes = np.where(encre.mean(axis=0) > 0.004)[0]
     if len(lignes) < 10 or len(colonnes) < 10:
