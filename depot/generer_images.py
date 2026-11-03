@@ -88,20 +88,15 @@ def recadrer(gris):
     a = np.asarray(gris, dtype=np.int16)
     papier = np.percentile(a, 90)
     encre = a < papier - 45
-    
-    # SUPPRESSION de la détection automatique de cadre (cadre_imprime) 
-    # qui confond les fleurs denses du haut avec un bord de page :
-    # cadre = cadre_imprime(encre)
-    # if cadre:
-    #     x0, y0, x1, y1 = cadre
-    #     gris = gris.crop(cadre)
-    #     a, encre = a[y0:y1, x0:x1], encre[y0:y1, x0:x1]
 
     lignes = np.where(encre.mean(axis=1) > 0.004)[0]
     colonnes = np.where(encre.mean(axis=0) > 0.004)[0]
     if len(lignes) < 10 or len(colonnes) < 10:
         return gris
-    marge = int(0.015 * max(a.shape))
+    
+    # Augmentation de la marge (on passe de 0.015 à 0.035 par exemple)
+    marge = int(0.035 * max(a.shape))  
+    
     y0, y1 = max(lignes[0] - marge, 0), min(lignes[-1] + marge, a.shape[0])
     x0, x1 = max(colonnes[0] - marge, 0), min(colonnes[-1] + marge, a.shape[1])
     return gris.crop((x0, y0, x1, y1))
